@@ -1,0 +1,17 @@
+import React, { useState } from 'react';
+import { View, Pressable, Keyboard } from 'react-native';
+import type { JordanLocation } from '@masar/shared';
+import { request } from '../../api/client';
+import { Button, Field, Icon, Txt, s, c } from './ui';
+import { useWords } from './data';
+import JordanMap from './JordanMap';
+import { GPSButton, useCurrentLocation } from './location';
+export function LocationSearch({ onSelect, scope='resident' }: { scope?:'resident'|'agency'; onSelect: (place: JordanLocation) => void }) {
+  const w = useWords(); const [search, setSearch] = useState(''); const [results, setResults] = useState<JordanLocation[]>([]); const [state, setState] = useState('idle');
+  async function find() { Keyboard.dismiss(); setState('loading'); setResults([]); try { const places = await request<JordanLocation[]>(`/${scope}/places?q=${encodeURIComponent(search.trim())}`); setResults(places); setState(places.length ? 'idle' : 'empty'); } catch { setState('error'); } }
+  return <View style={{ gap: 8, zIndex: 20 }}><View style={{ flexDirection: 'row', gap: 7, alignItems: 'flex-end' }}><View style={{ flex: 1 }}><Field label={w('Search anywhere in Jordan', 'ابحث في أي مكان في الأردن')} value={search} onChangeText={v => { setSearch(v); setResults([]); }} maxLength={120} placeholder={w('City, village, street or landmark', 'مدينة أو قرية أو شارع أو معلم')}/></View><Button disabled={state === 'loading' || search.trim().length < 2} onPress={() => void find()}>{state === 'loading' ? '…' : w('Find', 'بحث')}</Button></View>{state === 'error' && <Txt size={12} color="#B42318">{w('Search unavailable. Use GPS or select a point on the map.', 'البحث غير متاح. استخدم GPS أو اختر نقطة على الخريطة.')}</Txt>}{state === 'empty' && <Txt size={12} color={c.muted}>{w('No match found. You can select any point on the map.', 'لا توجد نتائج. يمكنك تحديد أي نقطة على الخريطة.')}</Txt>}{results.length > 0 && <View style={{zIndex:30,padding:8,backgroundColor:'white',borderRadius:14,boxShadow:'0 4px 20px #1233',gap:6}}>{results.slice(0, 4).map((p, i) => <Pressable key={i} accessibilityRole="button" onPress={() => { onSelect(p); setResults([]); }} style={[s.row, { padding: 10, backgroundColor: '#E9F2EF', borderRadius: 10, minHeight: 44 }]}><Icon name="location-outline" size={18}/><Txt size={12}>{p.label}</Txt></Pressable>)}</View>}</View>;
+}
+export function LocationPicker({ value, onChange, height = 230 }: { value?: JordanLocation; onChange: (value: JordanLocation) => void; height?: number }) {
+  const w = useWords(); const gps = useCurrentLocation();
+  return <View style={{ gap: 12 }}><LocationSearch onSelect={onChange}/><GPSButton controller={gps} onSelect={onChange}/><View style={{ height }}><JordanMap latitude={value?.latitude ?? 31.2} longitude={value?.longitude ?? 36.5} countryView={!value} gps={gps.fix} onPick={onChange} reports={[]}/></View>{value && <><Field label={w('Place / neighborhood name', 'اسم المكان أو الحي')} value={value.label} onChangeText={label => onChange({ ...value, label })} maxLength={240}/><Txt size={11} color={c.muted}>{value.latitude.toFixed(5)}, {value.longitude.toFixed(5)}</Txt></>}<Txt size={12} color={c.muted}>{w('Blue marks a GPS reading only. Teal marks your selection. No background tracking. Search data: OpenStreetMap / Photon.', 'الأزرق لقراءة GPS فقط، والفيروزي لاختيارك. لا يوجد تتبع بالخلفية. بيانات البحث: OpenStreetMap / Photon.')}</Txt></View>;
+}

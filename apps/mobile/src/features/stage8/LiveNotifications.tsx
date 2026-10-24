@@ -1,0 +1,7 @@
+import {useEffect} from 'react';
+import {AppState} from 'react-native';
+import {io,type Socket} from 'socket.io-client';
+import {useQueryClient} from '@tanstack/react-query';
+import {request,apiUrl} from '../../api/client';
+import {useAuth} from '../../auth/AuthProvider';
+export function LiveNotifications(){const {user,state}=useAuth();const client=useQueryClient();useEffect(()=>{if(state!=='authenticated')return;let stopped=false,socket:Socket|undefined,timer:ReturnType<typeof setTimeout>;const refresh=()=>{for(const key of ['notifications','resident','agency'])void client.invalidateQueries({queryKey:[key]});};const connect=async()=>{if(stopped||AppState.currentState!=='active')return;try{const{ticket}=await request<{ticket:string}>('/realtime/ticket','POST',{});if(stopped)return;socket=io(apiUrl,{auth:{ticket},transports:['websocket'],reconnection:false,timeout:7000});socket.on('connect',refresh);socket.on('notifications:changed',refresh);socket.on('connect_error',retry);socket.on('disconnect',retry);}catch{retry();}};const retry=()=>{socket?.removeAllListeners();socket?.disconnect();if(!stopped)timer=setTimeout(()=>void connect(),10000);};void connect();const subscription=AppState.addEventListener('change',value=>{clearTimeout(timer);socket?.removeAllListeners();socket?.disconnect();if(value==='active')void connect();});return()=>{stopped=true;clearTimeout(timer);subscription.remove();socket?.removeAllListeners();socket?.disconnect();};},[state,user?.id,user?.agency?.id]);return null;}

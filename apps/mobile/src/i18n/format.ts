@@ -1,0 +1,9 @@
+export type Locale='en'|'ar';
+export function normalizeLocale(value:unknown):Locale{return value==='ar'?'ar':'en';}
+export const transferLabels={en:{pending:'Pending',accepted:'Accepted',declined:'Declined',cancelled:'Cancelled'},ar:{pending:'معلق',accepted:'مقبول',declined:'مرفوض',cancelled:'ملغى'}} as const;
+export function transferLabel(value:string,locale:Locale){return transferLabels[locale][value as keyof typeof transferLabels.en]??(locale==='ar'?'غير معروف':'Unknown');}
+// Isolate identifiers for display only. Never modify stored values or form input.
+export function readableText(text:string,locale:Locale){if(locale!=='ar'||/[\u2066-\u2069]/.test(text))return text;return text.replace(/https?:\/\/[^\s]+|[\w.+-]+@[\w.-]+\.[a-z]{2,}|\bMS-[A-Z\d-]+\b|\b[a-f\d]{24}\b|-?\d{1,3}\.\d{2,}\s*,\s*-?\d{1,3}\.\d{2,}/gi,value=>'\u2066'+value+'\u2069');}
+export function localizedNumber(value:number,locale:Locale){return new Intl.NumberFormat(locale==='ar'?'ar-JO':'en-GB').format(value);}
+export function formatTimestamp(value:string,locale:Locale,timeZone?:string){const date=new Date(value);if(!Number.isFinite(date.getTime()))return '—';return new Intl.DateTimeFormat(locale==='ar'?'ar-JO-u-ca-gregory':'en-GB',{dateStyle:'medium',timeStyle:'short',...(timeZone?{timeZone}:{})}).format(date);}
+export function areaLabel(value:string,locale:Locale){if(locale!=='ar')return value;const match=value.match(/^(?:Jordan service area|Jordan · cell:)\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);if(match)return `خلية خدمة في الأردن · ${match[1]}, ${match[2]}`;return value.replace(' (fictional showcase)',' (عرض افتراضي)').replace('Al Nour District','حي النور').replace('Al Amal District','حي الأمل').replace('Al Waha District','حي الواحة').replace('Amman','عمّان').replace('Irbid','إربد').replace('Aqaba','العقبة').replace('Zarqa','الزرقاء');}

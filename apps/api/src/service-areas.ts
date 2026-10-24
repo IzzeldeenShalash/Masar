@@ -1,0 +1,8 @@
+import {Neighborhood,Subscription,AreaAlert} from './resident-db';
+import { neighborhoods } from '@masar/shared';
+// Coarse, public service cells, never household coordinates or private user labels.
+export function cellFor(latitude:number,longitude:number){const lat=Math.min(33.49,Math.max(29.01,Math.floor(latitude*50)/50+.01)),lon=Math.min(39.39,Math.max(34.81,Math.floor(longitude*50)/50+.01));return{key:`cell:${lat.toFixed(2)},${lon.toFixed(2)}`,latitude:lat,longitude:lon,label:`Jordan service area ${lat.toFixed(2)}, ${lon.toFixed(2)}`};}
+export async function ensureDemoAreas(){for(const n of neighborhoods)await Neighborhood.updateOne({key:`demo:${n.id}`},{$setOnInsert:{key:`demo:${n.id}`,label:`${n.name} · ${n.city} (fictional showcase)`,latitude:n.latitude,longitude:n.longitude}},{upsert:true});}
+export async function upgradeAreas(){await ensureDemoAreas();const subscriptions=await Subscription.find();for(const s of subscriptions){const old=await Neighborhood.findById(s.neighborhoodId);if(!old?.latitude||!old.longitude||old.key.startsWith('cell:')||old.key.startsWith('demo:'))continue;const cell=cellFor(old.latitude,old.longitude);const area=await Neighborhood.findOneAndUpdate({key:cell.key},{$setOnInsert:cell},{upsert:true,returnDocument:'after'});await Subscription.updateOne({userId:s.userId,neighborhoodId:area._id},{$set:{label:s.label},$max:{home:s.home}},{upsert:true});await Subscription.deleteOne({_id:s._id});}
+for(const a of await AreaAlert.find({neighborhoodIds:{$size:0}})){const area=await Neighborhood.findOne({key:`demo:${a.neighborhood}`});if(area){a.neighborhoodIds=[area._id];a.type=a.key?.includes('road')?'roadworks':'electricity_maintenance';await a.save();}}
+}

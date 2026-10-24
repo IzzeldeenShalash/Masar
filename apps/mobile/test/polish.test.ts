@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizeLocale,readableText,transferLabel,formatTimestamp,areaLabel} from '../src/i18n/format';
+import {palette} from '../src/components/tokens';
+function luminance(hex:string){const [r,g,b]=hex.match(/[a-f\d]{2}/gi)!.map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*r+.7152*g+.0722*b;}
+function contrast(a:string,b:string){const x=luminance(a),y=luminance(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+test('only supported stored locales select Arabic; malformed values use English',()=>{assert.equal(normalizeLocale('ar'),'ar');for(const value of [null,undefined,'AR','fr','<script>','en'])assert.equal(normalizeLocale(value),'en');});
+test('Arabic display isolates email, case identifiers and coordinates without changing stored input',()=>{const original='بلاغ MS-SHOWCASE-1701 · user@demo.com · 31.95390, 35.91060';const displayed=readableText(original,'ar');assert.ok(displayed.includes('\u2066MS-SHOWCASE-1701\u2069'));assert.ok(displayed.includes('\u2066user@demo.com\u2069'));assert.ok(displayed.includes('\u206631.95390, 35.91060\u2069'));assert.equal(readableText(displayed,'ar'),displayed);assert.equal(readableText(original,'en'),original);});
+test('every transfer state has an Arabic label rather than a raw API code',()=>{for(const state of ['pending','accepted','declined','cancelled'])assert.notEqual(transferLabel(state,'ar'),state);assert.equal(transferLabel('unknown','ar'),'غير معروف');});
+test('timestamps remain Gregorian/localized and invalid values never render Invalid Date',()=>{assert.match(formatTimestamp('2026-10-24T10:30:00Z','en','Asia/Amman'),/2026/);assert.match(formatTimestamp('2026-10-24T10:30:00Z','ar','Asia/Amman'),/٢٠٢٦/);assert.equal(formatTimestamp('not-a-time','ar'),'—');});
+test('public service cells and fictional district labels have Arabic presentation',()=>{assert.match(areaLabel('Jordan service area 31.95, 35.91','ar'),/خلية خدمة/);assert.equal(areaLabel('Al Nour District · Amman (fictional showcase)','ar'),'حي النور · عمّان (عرض افتراضي)');});
+test('body/status text meets AA contrast and control boundaries meet 3:1',()=>{for(const fg of [palette.ink,palette.muted,palette.teal,palette.amber,palette.red])assert.ok(contrast(fg,'#FFFFFF')>=4.5,`${fg} fails 4.5:1`);assert.ok(contrast(palette.muted,palette.bg)>=4.5);assert.ok(contrast(palette.link,palette.pale)>=4.5);assert.ok(contrast(palette.controlBorder,'#FFFFFF')>=3);});

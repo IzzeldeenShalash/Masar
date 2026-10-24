@@ -1,0 +1,7 @@
+import type {Express} from 'express';
+import {rateLimit} from 'express-rate-limit';
+import {aiInputSchema} from '@masar/shared';
+import type {Config} from './config';
+import {AIAnalysis} from './ai-db';
+import {AIUnavailable,createAnalysisService,providerStatus,analysisReview} from './ai-service';
+export function registerAIRoutes(app:Express,config:Config){const analyze=createAnalysisService(config);app.get('/resident/ai/status',async(_req,res)=>res.json(await providerStatus(config)));app.post('/resident/ai/analyze',rateLimit({windowMs:60000,limit:4,standardHeaders:true,legacyHeaders:false,message:{error:{code:'RATE_LIMITED',message:'Please wait before another AI review. Manual submission remains available.'}}}),async(req,res)=>{const input=aiInputSchema.safeParse(req.body);if(!input.success)return res.status(400).json({error:{code:'VALIDATION',message:'Enter report details and a location before AI review.'}});try{res.json(await analyze(input.data,req.account!.id));}catch(e){if(e instanceof AIUnavailable)return res.status(503).json({error:{code:'UNAVAILABLE',message:'AI review unavailable. Submit for manual routing or retry later.'},state:e.state,manualRoutingAvailable:true});throw e;}});app.get('/resident/ai/analyses/:id',async(req,res)=>{if(!/^[a-f\d]{24}$/i.test(String(req.params.id)))return res.status(404).end();const record=await AIAnalysis.findOne({_id:req.params.id,userId:req.account!.id,status:'succeeded'});if(!record)return res.status(404).end();res.json(await analysisReview(record,req.account!.id));});}

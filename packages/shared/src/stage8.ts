@@ -1,0 +1,16 @@
+import {z} from 'zod';
+import {categorySchema,reportLocationSchema} from './resident';
+export const issueKindSchema=z.enum(['problem','improvement']);
+export const urgencySchema=z.enum(['routine','soon','prompt_review']);
+export const assistantDraftSchema=z.object({kind:issueKindSchema,title:z.string().min(5).max(100),description:z.string().min(15).max(2000),category:categorySchema,missingInformation:z.array(z.string().max(240)).max(5)}).strict();
+export const assistantOutputSchema=z.object({reply:z.string().min(1).max(5000),draft:assistantDraftSchema.nullable(),references:z.array(z.string().max(100)).max(12)}).strict();
+export const triageOutputSchema=z.object({title:z.string().min(5).max(100),description:z.string().min(15).max(2000),category:categorySchema,urgency:urgencySchema,urgencyReason:z.string().max(400),departmentId:z.string().nullable(),missingInformation:z.array(z.string().max(240)).max(6),imageObservations:z.array(z.string().max(400)).max(6),duplicateIds:z.array(z.string()).max(5)}).strict();
+export const assistantSendSchema=z.object({clientId:z.uuid(),text:z.string().trim().min(1).max(3000),locale:z.enum(['ar','en']),issueId:z.string().regex(/^[a-f\d]{24}$/i).optional(),summarize:z.boolean().default(false)}).strict();
+export const triageInputSchema=z.object({title:z.string().trim().min(5).max(100),description:z.string().trim().min(15).max(2000),category:categorySchema,kind:issueKindSchema,location:reportLocationSchema,photoIds:z.array(z.string().regex(/^[a-f\d]{24}$/i)).max(3),locale:z.enum(['ar','en']),allowExternalImages:z.boolean().default(false)}).strict();
+export const threadSendSchema=z.object({clientId:z.uuid(),text:z.string().trim().max(2000),photoIds:z.array(z.string().regex(/^[a-f\d]{24}$/i)).max(3).default([])}).strict().refine(v=>!!v.text||v.photoIds.length>0);
+export type AssistantDraft=z.infer<typeof assistantDraftSchema>;
+export type TriageResult=z.infer<typeof triageOutputSchema>;
+export type AssistantTurn={locale:'ar'|'en';issueId?:string;summarize:boolean;id:string;clientId:string;text:string;reply:string;draft:AssistantDraft|null;references:string[];state:'pending'|'succeeded'|'failed';provider:string;model:string;createdAt:string};
+export type ConversationSummary={id:string;title:string;updatedAt:string};
+export type ThreadMessage={id:string;text:string;author:string;role:'USER'|'AGENCY';own:boolean;hidden:boolean;photoIds:string[];createdAt:string};
+export type CommunityIssue={id:string;title:string;summary:string;category:string;status:string;kind:'problem'|'improvement';supportCount:number;supported:boolean;following:boolean;own:boolean;canManage:boolean;fullAccess:boolean;agency:string|null;urgency:string|null;history:{message:string;date:string}[]};

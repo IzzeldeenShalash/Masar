@@ -1,0 +1,42 @@
+{
+  "name": "@masar/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test --test-concurrency=1 test/*.test.ts",
+    "test:preview": "tsx test/preview.ts",
+    "db:walkthrough": "tsx src/seed-walkthrough.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "@masar/shared": "*",
+    "@node-rs/argon2": "^2.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "mongoose": "^9.0.0",
+    "music-metadata": "^12.2.3",
+    "sharp": "^0.35.5",
+    "socket.io": "^4.8.4",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^6.0.3",
+    "mongodb-memory-server": "^11.0.0",
+    "socket.io-client": "^4.8.4",
+    "supertest": "^7.1.4",
+    "tsx": "^4.20.6"
+  }
+}

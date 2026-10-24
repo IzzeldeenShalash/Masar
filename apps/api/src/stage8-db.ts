@@ -1,0 +1,21 @@
+import mongoose,{Schema} from 'mongoose';
+const conversation=new Schema({userId:{type:Schema.Types.ObjectId,required:true},title:{type:String,required:true}},{timestamps:true});
+conversation.index({userId:1,_id:-1});
+export const Conversation=mongoose.model('AssistantConversation',conversation);
+const turn=new Schema({conversationId:{type:Schema.Types.ObjectId,required:true},userId:{type:Schema.Types.ObjectId,required:true},clientId:{type:String,required:true},text:String,locale:{type:String,default:'en'},issueId:Schema.Types.ObjectId,summarize:{type:Boolean,default:false},inputDigest:String,reply:String,draft:Schema.Types.Mixed,references:[String],state:{type:String,enum:['pending','succeeded','failed'],required:true},provider:String,model:String},{timestamps:true});
+turn.index({userId:1,clientId:1},{unique:true});turn.index({conversationId:1,_id:-1});
+export const AssistantTurnModel=mongoose.model('AssistantTurn',turn);
+const participation=new Schema({issueId:{type:Schema.Types.ObjectId,required:true},userId:{type:Schema.Types.ObjectId,required:true},support:{type:Boolean,default:false},following:{type:Boolean,default:false}},{timestamps:true});
+participation.index({issueId:1,userId:1},{unique:true});
+export const Participation=mongoose.model('IssueParticipation',participation);
+const message=new Schema({issueId:{type:Schema.Types.ObjectId,required:true},userId:{type:Schema.Types.ObjectId,required:true},agencyId:Schema.Types.ObjectId,clientId:{type:String,required:true},text:String,inputDigest:String,role:{type:String,enum:['USER','AGENCY'],required:true},photoIds:[Schema.Types.ObjectId],hidden:{type:Boolean,default:false},moderationReason:String,moderationHistory:[{actorId:Schema.Types.ObjectId,hidden:Boolean,reason:String,date:Date}]},{timestamps:true});
+message.index({userId:1,clientId:1},{unique:true});message.index({issueId:1,_id:-1});
+export const IssueMessage=mongoose.model('IssueMessage',message);
+const flag=new Schema({messageId:{type:Schema.Types.ObjectId,required:true},issueId:{type:Schema.Types.ObjectId,required:true},userId:{type:Schema.Types.ObjectId,required:true},reason:String},{timestamps:true});
+flag.index({messageId:1,userId:1},{unique:true});
+export const MessageFlag=mongoose.model('MessageFlag',flag);
+const ticket=new Schema({digest:{type:String,required:true,unique:true},sessionId:{type:Schema.Types.ObjectId,required:true},expiresAt:{type:Date,required:true}},{timestamps:true});
+ticket.index({expiresAt:1},{expireAfterSeconds:0});
+export const SocketTicket=mongoose.model('SocketTicket',ticket);
+export const TriageAnalysis=mongoose.model('IssueTriage',new Schema({userId:{type:Schema.Types.ObjectId,required:true},issueId:{type:Schema.Types.ObjectId,index:true},provider:String,model:String,result:Schema.Types.Mixed,sourceDigest:String},{timestamps:true}));
+export async function migrateStage8(){for(const model of [Conversation,AssistantTurnModel,Participation,IssueMessage,MessageFlag,SocketTicket,TriageAnalysis])await model.createIndexes();}

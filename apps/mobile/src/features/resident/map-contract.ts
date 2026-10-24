@@ -1,0 +1,7 @@
+import type { JordanLocation, ResidentReport } from '@masar/shared';
+import type { GPSFix } from './location';
+export type MapProps = { latitude: number; longitude: number; reports: ResidentReport[]; interactive?: boolean; onSelect?: (id: string) => void; onPick?: (place: JordanLocation) => void; countryView?: boolean; gps?: GPSFix | null };
+export function readMapMessage(raw: string, props: MapProps) {
+  try { const message = JSON.parse(raw); if (message.source === 'masar-location' && Number.isFinite(message.latitude) && Number.isFinite(message.longitude) && message.latitude >= 29 && message.latitude <= 33.5 && message.longitude >= 34.8 && message.longitude <= 39.4) props.onPick?.({ label: 'Jordan · ' + message.latitude.toFixed(5) + ', ' + message.longitude.toFixed(5), latitude: message.latitude, longitude: message.longitude }); else if (message.source === 'masar-map' && props.reports.some(r => r.id === message.id)) props.onSelect?.(message.id); } catch { /* Ignore unrelated messages. */ }
+}
+export function mapPayload(props: MapProps, locale: string) { return JSON.stringify({ latitude: props.latitude, longitude: props.longitude, reports: props.reports.filter(r => typeof r.latitude === 'number' && typeof r.longitude === 'number').map(r => ({ id: r.id, title: r.title, latitude: r.latitude, longitude: r.longitude, category: r.category })), interactive: props.interactive !== false, pick: !!props.onPick, countryView: !!props.countryView, gps: props.gps ?? null, locale }).replace(/</g, '\\u003c'); }

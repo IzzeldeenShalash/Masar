@@ -1,0 +1,46 @@
+{
+  "name": "masar",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@11.21.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": true
+    }
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "mongodb-memory-server": false
+  },
+  "engines": {
+    "node": ">=22.23.4 <23 || >=24.15.0 <25"
+  },
+  "scripts": {
+    "dev": "node packages/dev-cli/bin/run.mjs dev",
+    "api": "npm run dev --workspace=@masar/api",
+    "mobile": "npm run start --workspace=@masar/mobile",
+    "web": "npm run web --workspace=@masar/mobile",
+    "db:migrate": "npm run db:migrate --workspace=@masar/api",
+    "db:seed": "npm run db:seed --workspace=@masar/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "test": "npm run test --workspace=@masar/api && npm run test:polish && npm run test --workspace=@masar/dev-cli",
+    "export:web": "npm run export:web --workspace=@masar/mobile",
+    "export:android": "npm run export:android --workspace=@masar/mobile",
+    "expo:check": "npm run expo:check --workspace=@masar/mobile",
+    "test:preview": "npm run test:preview --workspace=@masar/api",
+    "demo:scenarios": "node packages/dev-cli/bin/run.mjs demo",
+    "test:polish": "tsx --test apps/mobile/test/*.test.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "typescript-eslint": "^8.46.0",
+    "typescript": "~6.0.3",
+    "tsx": "^4.20.6"
+  }
+}

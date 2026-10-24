@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Masar | مسار",
+    "slug": "masar",
+    "scheme": "masar",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "example.masar.demo",
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "bundleIdentifier": "example.masar.demo",
+      "supportsTablet": true
+    },
+    "web": {
+      "output": "single",
+      "name": "Masar — A clear path"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F6F7F4",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Masar to use your location when you choose Use my location. اسمح لمسار باستخدام موقعك عند اختياره.",
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false,
+          "motionUsagePermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Masar to take a photo for your report. اسمح لمسار بالتقاط صورة لبلاغك.",
+          "photosPermission": "Allow Masar to attach a photo you choose. اسمح لمسار بإرفاق صورة تختارها.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Masar to record an issue description when you choose Record by Voice. اسمح لمسار بتسجيل وصف المشكلة عند اختيار التسجيل بالصوت.",
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
+    ],
+    "extra": {
+      "supportsRTL": true
+    }
+  }
+}

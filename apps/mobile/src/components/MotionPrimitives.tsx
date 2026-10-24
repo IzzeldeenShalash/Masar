@@ -1,0 +1,4 @@
+import React,{useEffect,useRef} from 'react';
+import {Platform,Animated,Easing,type ViewStyle,type StyleProp} from 'react-native';
+import {useReducedMotion} from '../accessibility/hooks';
+export function Entrance({children,style,delay=0}:React.PropsWithChildren<{style?:StyleProp<ViewStyle>;delay?:number}>){const reduced=useReducedMotion();const value=useRef(new Animated.Value(1)).current;useEffect(()=>{if(reduced){value.setValue(1);return;}value.setValue(0);const animation=Animated.timing(value,{toValue:1,duration:190,delay:Math.min(delay,180),easing:Easing.out(Easing.quad),useNativeDriver:Platform.OS!=='web'});animation.start();return()=>animation.stop();},[reduced]);return <Animated.View style={[style,{opacity:value,transform:[{translateY:value.interpolate({inputRange:[0,1],outputRange:[7,0]})}]}]}>{children}</Animated.View>;}
